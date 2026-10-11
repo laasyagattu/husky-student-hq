@@ -35,10 +35,10 @@ def delete_company(db: Session, company: Company) -> None:
     db.commit()
 
 
-def get_company_with_applications(db: Session, company_id: int) -> Company | None:
+def get_company_detail(db: Session, company_id: int) -> Company | None:
     query = (
         select(Company)
-        .options(selectinload(Company.applications))
+        .options(selectinload(Company.applications), selectinload(Company.contacts))
         .where(Company.id == company_id)
     )
     return db.scalar(query)

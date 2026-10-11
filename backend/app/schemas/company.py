@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from app.schemas.application import ApplicationRead
+from app.schemas.contact import ContactRead
 
 
 class CompanyBase(BaseModel):
@@ -28,3 +29,4 @@ class CompanyRead(CompanyBase):
 
 class CompanyDetail(CompanyRead):
     applications: list[ApplicationRead] = []
+    contacts: list[ContactRead] = []

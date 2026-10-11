@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 
 if TYPE_CHECKING:
     from app.models.application import Application
+    from app.models.contact import Contact
 
 class Company(Base):
     __tablename__ = "companies"
@@ -20,4 +21,7 @@ class Company(Base):
     )
     applications: Mapped[list["Application"]] = relationship(
         back_populates="company", cascade="all, delete-orphan"
+    )
+    contacts: Mapped[list["Contact"]] = relationship(
+        back_populates="company", passive_deletes=True
     )
