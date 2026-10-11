@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import selectinload
 
 from app.models.company import Company
 from app.schemas.company import CompanyCreate, CompanyUpdate
@@ -32,3 +33,12 @@ def update_company(db: Session, company: Company, data: CompanyUpdate) -> Compan
 def delete_company(db: Session, company: Company) -> None:
     db.delete(company)
     db.commit()
+
+
+def get_company_with_applications(db: Session, company_id: int) -> Company | None:
+    query = (
+        select(Company)
+        .options(selectinload(Company.applications))
+        .where(Company.id == company_id)
+    )
+    return db.scalar(query)

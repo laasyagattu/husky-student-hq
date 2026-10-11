@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.api.routes import companies
+from app.api.routes import applications, companies
 
 app = FastAPI(title="Waypoint API")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 )
 
 app.include_router(companies.router)
+app.include_router(applications.router)
 
 @app.get("/health")
 def health(db: Session = Depends(get_db)):

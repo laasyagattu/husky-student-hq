@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
+from app.schemas.application import ApplicationRead
 
 
 class CompanyBase(BaseModel):
@@ -24,3 +25,6 @@ class CompanyRead(CompanyBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class CompanyDetail(CompanyRead):
+    applications: list[ApplicationRead] = []

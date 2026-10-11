@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.crud import company as crud
 from app.db.session import get_db
-from app.schemas.company import CompanyCreate, CompanyRead, CompanyUpdate
+from app.schemas.company import CompanyCreate, CompanyDetail, CompanyRead, CompanyUpdate
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -25,8 +25,11 @@ def create_company(data: CompanyCreate, db: Session = Depends(get_db)):
     return crud.create_company(db, data)
 
 
-@router.get("/{company_id}", response_model=CompanyRead)
-def read_company(company=Depends(get_company_or_404)):
+@router.get("/{company_id}", response_model=CompanyDetail)
+def read_company(company_id: int, db: Session = Depends(get_db)):
+    company = crud.get_company_with_applications(db, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
     return company
 
 
