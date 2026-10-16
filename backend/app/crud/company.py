@@ -6,16 +6,20 @@ from app.models.company import Company
 from app.schemas.company import CompanyCreate, CompanyUpdate
 
 
-def get_companies(db: Session) -> list[Company]:
-    return list(db.scalars(select(Company).order_by(Company.name)))
+def get_companies(db: Session, user_id: int) -> list[Company]:
+    query = select(Company).where(Company.user_id == user_id).order_by(Company.name)
+    return list(db.scalars(query))
 
 
-def get_company(db: Session, company_id: int) -> Company | None:
-    return db.get(Company, company_id)
+def get_company(db: Session, company_id: int, user_id: int) -> Company | None:
+    company = db.get(Company, company_id)
+    if company is None or company.user_id != user_id:
+        return None
+    return company
 
 
-def create_company(db: Session, data: CompanyCreate) -> Company:
-    company = Company(**data.model_dump())
+def create_company(db: Session, data: CompanyCreate, user_id: int) -> Company:
+    company = Company(**data.model_dump(), user_id = user_id)
     db.add(company)
     db.commit()
     db.refresh(company)
@@ -35,10 +39,10 @@ def delete_company(db: Session, company: Company) -> None:
     db.commit()
 
 
-def get_company_detail(db: Session, company_id: int) -> Company | None:
+def get_company_detail(db: Session, company_id: int, user_id: int) -> Company | None:
     query = (
         select(Company)
         .options(selectinload(Company.applications), selectinload(Company.contacts))
-        .where(Company.id == company_id)
+        .where(Company.id == company_id, Company.user_id == user_id)
     )
     return db.scalar(query)

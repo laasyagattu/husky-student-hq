@@ -10,12 +10,14 @@ from app.schemas.coffee_chat import (
     CoffeeChatStatus,
     CoffeeChatUpdate,
 )
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/coffee-chats", tags=["coffee chats"])
 
 
-def get_chat_or_404(chat_id: int, db: Session = Depends(get_db)):
-    chat = crud.get_coffee_chat(db, chat_id)
+def get_chat_or_404(chat_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    chat = crud.get_coffee_chat(db, chat_id, user.id)
     if chat is None:
         raise HTTPException(status_code=404, detail="Coffee chat not found")
     return chat
@@ -26,21 +28,22 @@ def list_coffee_chats(
     contact_id: int | None = None,
     status: CoffeeChatStatus | None = None,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
-    return crud.get_coffee_chats(db, contact_id=contact_id, status=status)
+    return crud.get_coffee_chats(db, user.id, contact_id=contact_id, status=status)
 
 
 # must come before /{chat_id}, or FastAPI tries to read "follow-ups" as an id
 @router.get("/follow-ups", response_model=list[CoffeeChatRead])
-def list_due_follow_ups(db: Session = Depends(get_db)):
+def list_due_follow_ups(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return crud.get_due_follow_ups(db)
 
 
 @router.post("", response_model=CoffeeChatRead, status_code=status.HTTP_201_CREATED)
-def create_coffee_chat(data: CoffeeChatCreate, db: Session = Depends(get_db)):
-    if contact_crud.get_contact(db, data.contact_id) is None:
+def create_coffee_chat(data: CoffeeChatCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if contact_crud.get_contact(db, data.contact_id, user.id) is None:
         raise HTTPException(status_code=404, detail="Contact not found")
-    return crud.create_coffee_chat(db, data)
+    return crud.create_coffee_chat(db, data, user.id)
 
 
 @router.get("/{chat_id}", response_model=CoffeeChatRead)

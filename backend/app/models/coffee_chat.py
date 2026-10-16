@@ -28,3 +28,6 @@ class CoffeeChat(Base):
     )
 
     contact: Mapped["Contact"] = relationship(back_populates="coffee_chats")
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )

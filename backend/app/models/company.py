@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Text, DateTime, func
+from sqlalchemy import String, Text, DateTime, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 from typing import TYPE_CHECKING
@@ -24,4 +24,7 @@ class Company(Base):
     )
     contacts: Mapped[list["Contact"]] = relationship(
         back_populates="company", passive_deletes=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
     )

@@ -10,12 +10,14 @@ from app.schemas.application import (
     ApplicationStatus,
     ApplicationUpdate,
 )
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
 
-def get_application_or_404(application_id: int, db: Session = Depends(get_db)):
-    application = crud.get_application(db, application_id)
+def get_application_or_404(application_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    application = crud.get_application(db, application_id, user_id)
     if application is None:
         raise HTTPException(status_code=404, detail="Application not found")
     return application
@@ -26,12 +28,13 @@ def list_applications(
     company_id: int | None = None,
     status: ApplicationStatus | None = None,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
-    return crud.get_applications(db, company_id=company_id, status=status)
+    return crud.get_applications(db, user.id, company_id=company_id, status=status)
 
 
 @router.post("", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED)
-def create_application(data: ApplicationCreate, db: Session = Depends(get_db)):
+def create_application(data: ApplicationCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     if company_crud.get_company(db, data.company_id) is None:
         raise HTTPException(status_code=404, detail="Company not found")
     return crud.create_application(db, data)

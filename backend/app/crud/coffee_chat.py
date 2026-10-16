@@ -10,9 +10,9 @@ CLOSED_STATUSES = ("completed", "declined")
 
 
 def get_coffee_chats(
-    db: Session, contact_id: int | None = None, status: str | None = None
+    db: Session, user_id: int, contact_id: int | None = None, status: str | None = None
 ) -> list[CoffeeChat]:
-    query = select(CoffeeChat).order_by(CoffeeChat.created_at.desc())
+    query = select(CoffeeChat).where(CoffeeChat.user_id == user_id).order_by(CoffeeChat.created_at.desc())
     if contact_id is not None:
         query = query.where(CoffeeChat.contact_id == contact_id)
     if status is not None:
@@ -20,9 +20,10 @@ def get_coffee_chats(
     return list(db.scalars(query))
 
 
-def get_due_follow_ups(db: Session) -> list[CoffeeChat]:
+def get_due_follow_ups(db: Session, user_id: int) -> list[CoffeeChat]:
     query = (
         select(CoffeeChat)
+        .where(CoffeeChat.user_id == user_id)
         .where(CoffeeChat.follow_up_date <= date.today())
         .where(CoffeeChat.status.not_in(CLOSED_STATUSES))
         .order_by(CoffeeChat.follow_up_date)
@@ -30,12 +31,15 @@ def get_due_follow_ups(db: Session) -> list[CoffeeChat]:
     return list(db.scalars(query))
 
 
-def get_coffee_chat(db: Session, chat_id: int) -> CoffeeChat | None:
-    return db.get(CoffeeChat, chat_id)
+def get_coffee_chat(db: Session, chat_id: int, user_id: int) -> CoffeeChat | None:
+    chat = db.get(CoffeeChat, chat_id)
+    if chat is None or chat.user_id != user_id:
+        return None
+    return chat
 
 
-def create_coffee_chat(db: Session, data: CoffeeChatCreate) -> CoffeeChat:
-    chat = CoffeeChat(**data.model_dump())
+def create_coffee_chat(db: Session, data: CoffeeChatCreate, user_id: int) -> CoffeeChat:
+    chat = CoffeeChat(**data.model_dump(), user_id = user_id)
     db.add(chat)
     db.commit()
     db.refresh(chat)
